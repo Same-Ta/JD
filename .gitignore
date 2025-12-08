@@ -1,0 +1,7 @@
+# .gitignore 파일 내용
+node_modules/
+.next/
+build/
+dist/
+.env.local
+.DS_Store

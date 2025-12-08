@@ -1,0 +1,319 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ===== WINNOW White & Blue Neon Theme ===== */
+
+:root {
+  --background: 210 100% 99%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 217 91% 60%;
+  --radius: 0.75rem;
+}
+
+/* ===== Soft Gradient Background - White to Light Sky Blue ===== */
+html, body {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 50%, #E0F2FE 100%) !important;
+  background-attachment: fixed !important;
+  color: #111827 !important;
+  min-height: 100vh;
+}
+
+/* Subtle blue ambient glow overlay */
+html::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse at 30% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 100%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Main gradient background class */
+.gradient-bg {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 50%, #E0F2FE 100%) !important;
+  min-height: 100vh;
+  position: relative;
+}
+
+.gradient-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(ellipse at 30% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 100%, rgba(37, 99, 235, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Glass Cards - Clean White with Soft Shadow ===== */
+.glass-card {
+  background: #FFFFFF !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(59, 130, 246, 0.08) !important;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Blue Neon Glow Effects ===== */
+.glow {
+  box-shadow: 
+    0 4px 15px rgba(37, 99, 235, 0.35),
+    0 0 25px rgba(59, 130, 246, 0.2) !important;
+}
+
+.glow-sm {
+  box-shadow: 
+    0 2px 10px rgba(37, 99, 235, 0.25),
+    0 0 15px rgba(59, 130, 246, 0.12) !important;
+}
+
+.glow-lg {
+  box-shadow: 
+    0 8px 30px rgba(37, 99, 235, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Hover glow effect */
+.hover-glow:hover {
+  box-shadow: 
+    0 8px 25px rgba(37, 99, 235, 0.2),
+    0 4px 15px rgba(0, 0, 0, 0.08) !important;
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* ===== Gradient Text - Blue Theme ===== */
+.text-gradient {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 50%, #1D4ED8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Blue Neon Gradient Buttons ===== */
+.btn-gradient {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+  color: white !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%) !important;
+  box-shadow: 
+    0 6px 25px rgba(37, 99, 235, 0.5),
+    0 0 30px rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* ===== Card Styles - Clean White ===== */
+.card-glass {
+  background: #FFFFFF !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 1rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.05),
+    0 1px 3px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.3s ease !important;
+  position: relative;
+  z-index: 1;
+}
+
+.card-glass:hover {
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.08),
+    0 4px 15px rgba(59, 130, 246, 0.1) !important;
+  transform: translateY(-4px);
+  border-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* ===== Background utilities - White Theme ===== */
+.bg-background { background: linear-gradient(180deg, #FFFFFF 0%, #F0F9FF 100%) !important; }
+.bg-foreground { background-color: #111827 !important; }
+.bg-card { background: #FFFFFF !important; }
+.bg-popover { background-color: #FFFFFF !important; }
+.bg-primary { background-color: #3B82F6 !important; }
+.bg-secondary { background-color: #F1F5F9 !important; }
+.bg-muted { background-color: #F1F5F9 !important; }
+.bg-accent { background-color: #EFF6FF !important; }
+.bg-destructive { background-color: #EF4444 !important; }
+
+/* Text utilities - Dark text for readability on light background */
+.text-foreground { color: #111827 !important; }
+.text-background { color: #FFFFFF !important; }
+.text-card-foreground { color: #111827 !important; }
+.text-popover-foreground { color: #111827 !important; }
+.text-primary { color: #3B82F6 !important; }
+.text-primary-foreground { color: #FFFFFF !important; }
+.text-secondary { color: #2563EB !important; }
+.text-secondary-foreground { color: #111827 !important; }
+.text-muted-foreground { color: #4B5563 !important; }
+.text-accent-foreground { color: #111827 !important; }
+.text-destructive { color: #EF4444 !important; }
+.text-destructive-foreground { color: #FFFFFF !important; }
+
+/* Border utilities - Light Theme */
+.border-border { border-color: rgba(0, 0, 0, 0.08) !important; }
+.border-input { border-color: #E5E7EB !important; }
+.border-primary { border-color: #3B82F6 !important; }
+.border-secondary { border-color: #2563EB !important; }
+.border-muted { border-color: #E5E7EB !important; }
+
+/* Ring utilities */
+.ring-ring { --tw-ring-color: rgba(59, 130, 246, 0.5) !important; }
+.ring-primary { --tw-ring-color: #3B82F6 !important; }
+
+/* Focus utilities */
+.focus\:ring-ring:focus { --tw-ring-color: rgba(59, 130, 246, 0.5) !important; }
+
+/* Default border color */
+*, *::before, *::after {
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* Input and form elements - Light Theme */
+input, textarea, select {
+  border-color: #E5E7EB;
+  background-color: #FFFFFF;
+  color: #111827;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 
+    0 0 0 3px rgba(59, 130, 246, 0.15),
+    0 0 15px rgba(59, 130, 246, 0.1);
+}
+input::placeholder, textarea::placeholder {
+  color: #9CA3AF;
+}
+
+/* Scrollbar - Light Theme with Blue accent */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background-color: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3B82F6, #2563EB);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60A5FA, #3B82F6);
+}
+
+/* Transitions */
+button, a {
+  transition: all 0.2s ease;
+}
+
+/* ===== Blue Neon Accent Colors ===== */
+.neon-blue {
+  color: #3B82F6;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.neon-indigo {
+  color: #6366F1;
+  text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+/* ===== Navigation Bar - Light with Blue accent ===== */
+.nav-bar {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== Card Variants ===== */
+.card-white {
+  background: #FFFFFF !important;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.card-white:hover {
+  border-color: rgba(59, 130, 246, 0.2);
+  box-shadow: 
+    0 8px 30px rgba(0, 0, 0, 0.08),
+    0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+/* ===== Text Colors for Light Background ===== */
+.text-gray-100 { color: #F3F4F6 !important; }
+.text-gray-200 { color: #E5E7EB !important; }
+.text-gray-300 { color: #D1D5DB !important; }
+.text-gray-400 { color: #9CA3AF !important; }
+.text-gray-500 { color: #6B7280 !important; }
+.text-gray-600 { color: #4B5563 !important; }
+.text-gray-700 { color: #374151 !important; }
+.text-gray-800 { color: #1F2937 !important; }
+.text-gray-900 { color: #111827 !important; }
+
+/* White text override for dark backgrounds */
+.text-white { color: #FFFFFF !important; }
+
+/* ===== Blue Glow Border Utility ===== */
+.border-glow {
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+/* ===== Floating Action Button with Glow ===== */
+.fab-glow {
+  box-shadow: 
+    0 4px 15px rgba(37, 99, 235, 0.4),
+    0 0 25px rgba(59, 130, 246, 0.25);
+}
+
+.fab-glow:hover {
+  box-shadow: 
+    0 6px 25px rgba(37, 99, 235, 0.5),
+    0 0 35px rgba(59, 130, 246, 0.35);
+}
+
+/* ===== Icon Glow Effect ===== */
+.icon-glow {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.5));
+}
+
+/* ===== Status Badge Colors ===== */
+.badge-blue {
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
