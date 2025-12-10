@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useRef, useEffect } from "react"
 import { Check, ChevronDown } from "lucide-react"
 
 export type Requirement = {
@@ -20,6 +20,26 @@ type Props = {
 }
 
 export default function ChecklistItem({ requirement, isExpanded, onToggle, onUpdateEvidence, onToggleExpand }: Props) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea based on content
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onUpdateEvidence(requirement.id, e.target.value)
+    
+    // Auto-resize
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"
+      textareaRef.current.style.height = `${Math.max(200, textareaRef.current.scrollHeight)}px`
+    }
+  }
+
+  useEffect(() => {
+    if (textareaRef.current && isExpanded) {
+      textareaRef.current.style.height = "auto"
+      textareaRef.current.style.height = `${Math.max(200, textareaRef.current.scrollHeight)}px`
+    }
+  }, [isExpanded])
+
   return (
     <div
       className="border border-border rounded-lg bg-card overflow-hidden transition-all duration-300 hover:border-primary/50"
@@ -64,23 +84,26 @@ export default function ChecklistItem({ requirement, isExpanded, onToggle, onUpd
       <div
         role="region"
         aria-hidden={!isExpanded}
-        className={`border-t border-border bg-secondary/30 overflow-hidden transition-[max-height,padding] duration-300 ease-in-out ${
-          isExpanded ? "max-h-[400px] p-4" : "max-h-0 p-0"
+        className={`border-t border-border bg-secondary/30 transition-all duration-300 ease-in-out ${
+          isExpanded ? "p-6" : "p-0 max-h-0 overflow-hidden"
         }`}
       >
-        {/* content only visible when expanded (textarea resizes naturally) */}
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-semibold text-foreground block mb-2">증명 자료 / 포트폴리오 링크 작성</label>
-            <textarea
-              value={requirement.evidence}
-              onChange={(e) => onUpdateEvidence(requirement.id, e.target.value)}
-              placeholder="예: 프로젝트 링크, 코드 샘플, 인증 자료 등을 작성해주세요"
-              className="w-full min-h-[120px] p-3 rounded border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            />
+        {isExpanded && (
+          <div className="space-y-3">
+            <div className="w-full">
+              <label className="text-sm font-semibold text-foreground block mb-3">증명 자료 / 포트폴리오 링크 작성</label>
+              <textarea
+                ref={textareaRef}
+                value={requirement.evidence}
+                onChange={handleTextareaChange}
+                placeholder="예: 프로젝트 링크, 코드 샘플, 인증 자료 등을 작성해주세요"
+                className="w-full p-4 rounded-lg border-2 border-border bg-white text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary resize-none transition-all"
+                style={{ minHeight: '250px', height: 'auto' }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">팁: 구체적인 프로젝트 예시, 링크, 또는 경험을 작성하면 더 강력한 지원서가 됩니다.</p>
           </div>
-          <p className="text-xs text-muted-foreground">팁: 구체적인 프로젝트 예시, 링크, 또는 경험을 작성하면 더 강력한 지원서가 됩니다.</p>
-        </div>
+        )}
       </div>
     </div>
   )

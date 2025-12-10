@@ -257,16 +257,20 @@ export default function ApplyPage() {
 
                                     {/* Accordion Effect */}
                                     {isChecked && (
-                                        <div className="mt-4 ml-10 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <div className="mt-4 ml-0 animate-in fade-in slide-in-from-top-2 duration-300">
                                             <Textarea
                                                 placeholder="이 항목과 관련된 경험을 자세히 설명해주세요..."
                                                 value={comments[item.id] || ""}
-                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
                                                     handleCommentChange(item.id, e.target.value)
-                                                }
+                                                    // Auto-resize
+                                                    e.target.style.height = 'auto'
+                                                    e.target.style.height = Math.max(120, e.target.scrollHeight) + 'px'
+                                                }}
                                                 onClick={(e: React.MouseEvent<HTMLTextAreaElement>) => e.stopPropagation()}
-                                                className="text-xs resize-none bg-white border-gray-200 rounded-lg focus:border-blue-500 focus:ring-blue-500"
-                                                rows={3}
+                                                className="w-full text-sm resize-none bg-white border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 p-4"
+                                                rows={6}
+                                                style={{ minHeight: '150px' }}
                                             />
                                         </div>
                                     )}
