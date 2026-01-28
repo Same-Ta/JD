@@ -14,6 +14,7 @@ type Application = {
     seekerEmail: string
     jobId: string
     jobTitle: string
+    jobCreatorId: string
     status: string
     appliedAt: string
     aiSummary?: string
@@ -30,11 +31,10 @@ export default function ApplicationDetailPage() {
     const router = useRouter()
     const params = useParams()
     const applicationId = params.id as string
-    const { user } = useAuth()
+    const { user, userData } = useAuth()
     const [application, setApplication] = useState<Application | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [selectedStatus, setSelectedStatus] = useState("")
-    const [showFullAnswers, setShowFullAnswers] = useState(false)
     const [generatedSummary, setGeneratedSummary] = useState("")
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
 
@@ -45,14 +45,29 @@ export default function ApplicationDetailPage() {
                 return
             }
 
+            // 기업회원이 아니면 접근 불가
+            if (userData?.role !== "company") {
+                alert("기업 회원만 접근할 수 있습니다.")
+                router.push("/jobs")
+                return
+            }
+
             if (!applicationId) return
 
             try {
                 const docRef = doc(db, "applications", applicationId)
                 const docSnap = await getDoc(docRef)
-                
+
                 if (docSnap.exists()) {
                     const data = { id: docSnap.id, ...docSnap.data() } as Application
+                    
+                    // 자신이 올린 공고의 지원서만 볼 수 있음
+                    if (data.jobCreatorId !== user.uid) {
+                        alert("접근 권한이 없습니다.")
+                        router.push("/admin/applications")
+                        return
+                    }
+                    
                     setApplication(data)
                     setSelectedStatus(data.status || "접수")
                 } else {
@@ -68,8 +83,10 @@ export default function ApplicationDetailPage() {
             }
         }
 
-        fetchApplication()
-    }, [applicationId, user, router])
+        if (userData !== null) {
+            fetchApplication()
+        }
+    }, [applicationId, user, userData, router])
 
     const handleStatusUpdate = async () => {
         if (!application || !applicationId) return
@@ -100,36 +117,30 @@ export default function ApplicationDetailPage() {
                 },
                 body: JSON.stringify({
                     checklistDetails: application.checklistDetails,
+                    jobTitle: application.jobTitle,
                     seekerName: application.seekerName,
                 }),
             })
 
             if (response.ok) {
                 const data = await response.json()
-                setGeneratedSummary(data.summary || "")
+                setGeneratedSummary(data.summary)
                 
-                // DB에도 저장
+                // AI 요약을 DB에 저장
                 const docRef = doc(db, "applications", applicationId)
                 await updateDoc(docRef, {
-                    aiSummary: data.summary || ""
+                    aiSummary: data.summary
                 })
             } else {
-                alert("요약 생성에 실패했습니다.")
+                alert("AI 요약 생성에 실패했습니다.")
             }
         } catch (error) {
-            console.error("요약 생성 실패:", error)
-            alert("요약 생성 중 오류가 발생했습니다.")
+            console.error("AI 요약 생성 실패:", error)
+            alert("AI 요약 생성 중 오류가 발생했습니다.")
         } finally {
             setIsGeneratingSummary(false)
         }
     }
-
-    useEffect(() => {
-        // aiSummary가 이미 있으면 표시
-        if (application?.aiSummary) {
-            setGeneratedSummary(application.aiSummary)
-        }
-    }, [application])
 
     if (isLoading) {
         return (
@@ -145,7 +156,7 @@ export default function ApplicationDetailPage() {
     if (!application) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-gray-500">지원서를 불러올 수 없습니다.</div>
+                <div className="text-gray-600">지원서를 찾을 수 없습니다.</div>
             </div>
         )
     }
@@ -198,7 +209,7 @@ export default function ApplicationDetailPage() {
             {/* Main Content */}
             <main className="max-w-5xl mx-auto px-6 py-8">
                 <div className="space-y-6">
-                    {/* AI Summary Card - 항상 표시 */}
+                    {/* AI Summary Card */}
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm p-6 border-2 border-blue-200">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-bold text-gray-900">AI 요약</h2>
@@ -258,7 +269,7 @@ export default function ApplicationDetailPage() {
                         </div>
                     </div>
 
-                    {/* Checklist Responses - 항상 표시 */}
+                    {/* Checklist Responses */}
                     <div className="bg-white rounded-lg shadow-sm p-6">
                         <h2 className="text-lg font-bold text-gray-900 mb-4">전체 답변</h2>
                             
@@ -281,55 +292,27 @@ export default function ApplicationDetailPage() {
                                             key={itemId} 
                                             className={`border-l-4 ${color.border} ${color.bg} rounded-r-lg p-5`}
                                         >
-                                            <div className="flex items-start justify-between mb-3">
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 text-base">{item.title}</h3>
-                                                    <p className="text-xs text-gray-600 mt-1">{item.description}</p>
-                                                </div>
-                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                    item.checked 
-                                                        ? "bg-green-100 text-green-700" 
-                                                        : "bg-gray-100 text-gray-500"
-                                                }`}>
-                                                    {item.checked ? "✓ 보유" : "미보유"}
-                                                </span>
+                                            <h3 className="font-bold text-gray-900 mb-2">{item.title}</h3>
+                                            <p className="text-sm text-gray-600 mb-3">{item.description}</p>
+                                            <div className="bg-white rounded-lg p-4 shadow-sm">
+                                                <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                                                    {item.comment || "작성된 내용이 없습니다."}
+                                                </p>
                                             </div>
-                                            
-                                            {item.comment && (
-                                                <div className="mt-3 pt-3 border-t border-gray-200">
-                                                    <p className="text-sm font-medium text-gray-700 mb-2">📝 경험 상세</p>
-                                                    <div className="bg-white rounded-lg p-4 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
-                                                        {item.comment}
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                     )
                                 })}
-                            </div>
-                        )}
+                                </div>
+                            )}
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex justify-end gap-3">
-                        <button
-                            onClick={() => router.push("/admin/applications")}
-                            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-                        >
-                            목록으로
-                        </button>
-                        <button
-                            onClick={() => {
-                                if (confirm("이 지원자를 면접 예정으로 변경하시겠습니까?")) {
-                                    setSelectedStatus("면접 예정")
-                                    handleStatusUpdate()
-                                }
-                            }}
-                            className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                        >
-                            면접 요청
-                        </button>
-                    </div>
+                    {/* Additional Comments */}
+                    {application.comments && (
+                        <div className="bg-white rounded-lg shadow-sm p-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4">추가 코멘트</h2>
+                            <p className="text-sm text-gray-800 whitespace-pre-wrap">{application.comments}</p>
+                        </div>
+                    )}
                 </div>
             </main>
         </div>

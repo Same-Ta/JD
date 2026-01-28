@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import {
     collection,
     query,
@@ -41,11 +42,11 @@ interface Application {
 }
 
 export default function CompanyDashboard() {
+    const router = useRouter()
     const [myJobs, setMyJobs] = useState<Job[]>([])
     const [selectedJob, setSelectedJob] = useState<Job | null>(null)
     const [applications, setApplications] = useState<Application[]>([])
     const [loading, setLoading] = useState(true)
-    const [expandedId, setExpandedId] = useState<string | null>(null)
 
     // Step 1: Fetch user's job postings
     useEffect(() => {
@@ -88,7 +89,6 @@ export default function CompanyDashboard() {
     // Step 2: Fetch applications for selected job
     const handleJobClick = async (job: Job) => {
         setSelectedJob(job)
-        setExpandedId(null)
 
         try {
             const q = query(
@@ -101,8 +101,6 @@ export default function CompanyDashboard() {
 
             querySnapshot.forEach((docSnap) => {
                 const data = docSnap.data()
-                console.log('Application raw data:', data) // 디버깅
-                console.log('checklistDetails from DB:', data.checklistDetails) // 디버깅
                 docs.push({
                     id: docSnap.id,
                     jobId: data.jobId || "",
@@ -125,16 +123,12 @@ export default function CompanyDashboard() {
     const handleBackToList = () => {
         setSelectedJob(null)
         setApplications([])
-        setExpandedId(null)
     }
 
     const updateStatus = async (
         applicationId: string,
         newStatus: "합격" | "불합격"
     ) => {
-        console.log("상태 변경 요청:", applicationId, newStatus)
-
-        // 낙관적 업데이트: UI를 먼저 변경
         const previousApplications = applications
         setApplications((prev) =>
             prev.map((app) =>
@@ -145,11 +139,9 @@ export default function CompanyDashboard() {
         try {
             const docRef = doc(db, "applications", applicationId)
             await updateDoc(docRef, { status: newStatus })
-            console.log("✅ DB 업데이트 완료")
         } catch (error) {
             console.error("상태 변경 실패:", error)
             alert("상태 변경 실패")
-            // 실패 시 이전 상태로 복원
             setApplications(previousApplications)
         }
     }
@@ -228,7 +220,7 @@ export default function CompanyDashboard() {
         )
     }
 
-    // Case B: Application Detail View
+    // Case B: Application List View
     return (
         <div className="py-6">
             <button
@@ -262,198 +254,55 @@ export default function CompanyDashboard() {
                     </thead>
                     <tbody>
                         {applications.map((app) => (
-                            <React.Fragment key={app.id}>
-                                <tr
-                                    className="cursor-pointer hover:bg-white/50 transition-colors border-b border-white/30"
-                                    onClick={() =>
-                                        setExpandedId(expandedId === app.id ? null : app.id)
-                                    }
-                                >
-                                    <td className="p-4 text-sm text-gray-800">
-                                        {app.seekerEmail}
-                                    </td>
-                                    <td className="p-4 text-sm text-gray-500">
-                                        {new Date(app.appliedDate).toLocaleDateString("ko-KR")}
-                                    </td>
-                                    <td className="p-4">
-                                        <span
-                                            className={`px-3 py-1 rounded-full text-xs font-medium ${
-                                                app.status === "합격"
-                                                    ? "bg-emerald-100 text-emerald-700"
-                                                    : app.status === "불합격"
-                                                        ? "bg-rose-100 text-rose-700"
-                                                        : "bg-amber-100 text-amber-700"
-                                            }`}
-                                        >
-                                            {app.status === "합격"
-                                                ? "합격"
+                            <tr
+                                key={app.id}
+                                className="cursor-pointer hover:bg-white/50 transition-colors border-b border-white/30"
+                                onClick={() => router.push(`/admin/applications/${app.id}`)}
+                            >
+                                <td className="p-4 text-sm text-gray-800">
+                                    {app.seekerEmail}
+                                </td>
+                                <td className="p-4 text-sm text-gray-500">
+                                    {new Date(app.appliedDate).toLocaleDateString("ko-KR")}
+                                </td>
+                                <td className="p-4">
+                                    <span
+                                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                            app.status === "합격"
+                                                ? "bg-emerald-100 text-emerald-700"
                                                 : app.status === "불합격"
-                                                    ? "불합격"
-                                                    : "검토 중"}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 space-x-2">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                updateStatus(app.id, "합격")
-                                            }}
-                                            className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 text-sm font-medium transition-colors"
-                                        >
-                                            합격
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                updateStatus(app.id, "불합격")
-                                            }}
-                                            className="px-4 py-1.5 bg-rose-500 text-white rounded-xl hover:bg-rose-600 text-sm font-medium transition-colors"
-                                        >
-                                            불합격
-                                        </button>
-                                    </td>
-                                </tr>
-                                {expandedId === app.id && (
-                                    <tr className="bg-white/30 border-b border-white/30">
-                                        <td colSpan={4} className="p-6">
-                                            <div className="space-y-4">
-                                                <h3 className="font-semibold text-gradient mb-4">📋 지원자 체크리스트 응답</h3>
-                                                
-                                                {(() => {
-                                                    const colors = ["border-l-pink-400", "border-l-orange-400", "border-l-purple-400", "border-l-cyan-400", "border-l-green-400", "border-l-blue-400"];
-                                                    
-                                                    console.log('Rendering app.checklistDetails:', app.checklistDetails); // 디버깅
-                                                    
-                                                    // 새로운 checklistDetails 형식 사용
-                                                    if (app.checklistDetails && Object.keys(app.checklistDetails).length > 0) {
-                                                        return (
-                                                            <div className="space-y-3">
-                                                                {Object.entries(app.checklistDetails).map(([id, detail]: [string, any], index) => {
-                                                                    console.log('Rendering detail:', id, detail); // 디버깅
-                                                                    // title이 있으면 title 사용, 없으면 content 사용
-                                                                    const itemTitle = detail.title || detail.content || `항목 #${id}`;
-                                                                    const itemDescription = detail.description || '';
-                                                                    console.log('itemTitle:', itemTitle); // 디버깅
-                                                                    
-                                                                    return (
-                                                                        <div 
-                                                                            key={id} 
-                                                                            className={`glass-card rounded-xl p-4 border-l-4 ${colors[index % colors.length]}`}
-                                                                        >
-                                                                            <div className="flex items-start gap-3">
-                                                                                <span className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${detail.checked ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                                                                                    {detail.checked ? "✓" : "✗"}
-                                                                                </span>
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <p className="font-medium text-gray-800 text-sm">{itemTitle}</p>
-                                                                                    {itemDescription && (
-                                                                                        <p className="text-xs text-gray-400 mt-0.5">{itemDescription}</p>
-                                                                                    )}
-                                                                                    {detail.comment ? (
-                                                                                        <div className="mt-2 bg-white/60 backdrop-blur-sm rounded-lg p-3">
-                                                                                            <p className="text-xs text-gray-400 mb-1">💬 지원자 코멘트</p>
-                                                                                            <p className="text-sm text-gray-600 leading-relaxed">{detail.comment}</p>
-                                                                                        </div>
-                                                                                    ) : (
-                                                                                        <p className="text-xs text-gray-400 mt-1 italic">코멘트 없음</p>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        );
-                                                    }
-
-                                                    // 기존 데이터 호환성: selectedJob의 checklist에서 내용 가져오기
-                                                    let parsedComments: Record<string, string> = {};
-                                                    try {
-                                                        if (typeof app.comments === 'string' && app.comments.startsWith('{')) {
-                                                            parsedComments = JSON.parse(app.comments);
-                                                        }
-                                                    } catch (e) {
-                                                        console.error('Comments parse error:', e);
-                                                    }
-
-                                                    // selectedJob에서 체크리스트 내용 매핑
-                                                    const checklistMap: Record<string, { title: string; description: string }> = {};
-                                                    if (selectedJob?.checklist && Array.isArray(selectedJob.checklist)) {
-                                                        selectedJob.checklist.forEach((item: any, idx) => {
-                                                            // id가 있으면 id로, 없으면 인덱스+1로 매핑
-                                                            const itemId = item.id || String(idx + 1);
-                                                            checklistMap[itemId] = {
-                                                                title: item.title || item.content || item.category || `항목 ${idx + 1}`,
-                                                                description: item.description || ''
-                                                            };
-                                                        });
-                                                    }
-
-                                                    const checkedItems = app.checkedItems || {};
-                                                    // checkedItems가 배열인 경우 처리
-                                                    let checkedItemIds: string[] = [];
-                                                    if (Array.isArray(checkedItems)) {
-                                                        checkedItemIds = checkedItems;
-                                                    } else {
-                                                        checkedItemIds = Object.keys(checkedItems).filter(k => checkedItems[k]);
-                                                    }
-
-                                                    const allItemIds = new Set([
-                                                        ...checkedItemIds,
-                                                        ...Object.keys(parsedComments)
-                                                    ]);
-
-                                                    if (allItemIds.size === 0) {
-                                                        return (
-                                                            <p className="text-sm text-gray-400 italic">제출된 체크리스트가 없습니다.</p>
-                                                        );
-                                                    }
-
-                                                    return (
-                                                        <div className="space-y-3">
-                                                            {Array.from(allItemIds).map((itemId, index) => {
-                                                                const isChecked = checkedItemIds.includes(itemId) || checkedItems[itemId] === true;
-                                                                const comment = parsedComments[itemId] || '';
-                                                                // 체크리스트 내용 가져오기 (없으면 ID 표시)
-                                                                const itemData = checklistMap[itemId];
-                                                                const itemTitle = itemData?.title || `항목 #${itemId}`;
-                                                                const itemDescription = itemData?.description || '';
-                                                                
-                                                                return (
-                                                                    <div 
-                                                                        key={itemId} 
-                                                                        className={`glass-card rounded-xl p-4 border-l-4 ${colors[index % colors.length]}`}
-                                                                    >
-                                                                        <div className="flex items-start gap-3">
-                                                                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 ${isChecked ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
-                                                                                {isChecked ? "✓" : "✗"}
-                                                                            </span>
-                                                                            <div className="flex-1 min-w-0">
-                                                                                <p className="font-medium text-gray-800 text-sm">{itemTitle}</p>
-                                                                                {itemDescription && (
-                                                                                    <p className="text-xs text-gray-400 mt-0.5">{itemDescription}</p>
-                                                                                )}
-                                                                                {comment ? (
-                                                                                    <div className="mt-2 bg-white/60 backdrop-blur-sm rounded-lg p-3">
-                                                                                        <p className="text-xs text-gray-400 mb-1">💬 지원자 코멘트</p>
-                                                                                        <p className="text-sm text-gray-600 leading-relaxed">{comment}</p>
-                                                                                    </div>
-                                                                                ) : (
-                                                                                    <p className="text-xs text-gray-400 mt-1 italic">코멘트 없음</p>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                )}
-                            </React.Fragment>
+                                                    ? "bg-rose-100 text-rose-700"
+                                                    : "bg-amber-100 text-amber-700"
+                                        }`}
+                                    >
+                                        {app.status === "합격"
+                                            ? "합격"
+                                            : app.status === "불합격"
+                                                ? "불합격"
+                                                : "검토 중"}
+                                    </span>
+                                </td>
+                                <td className="p-4 space-x-2">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            updateStatus(app.id, "합격")
+                                        }}
+                                        className="px-4 py-1.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 text-sm font-medium transition-colors"
+                                    >
+                                        합격
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            updateStatus(app.id, "불합격")
+                                        }}
+                                        className="px-4 py-1.5 bg-rose-500 text-white rounded-xl hover:bg-rose-600 text-sm font-medium transition-colors"
+                                    >
+                                        불합격
+                                    </button>
+                                </td>
+                            </tr>
                         ))}
                     </tbody>
                 </table>

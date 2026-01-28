@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { db } from "../../../lib/firebase"
-import { collection, getDocs, query, orderBy } from "firebase/firestore"
+import { collection, getDocs, query, where } from "firebase/firestore"
 import { useAuth } from "../../../context/AuthContext"
 
 type Application = {
@@ -13,6 +13,7 @@ type Application = {
     seekerEmail: string
     jobId: string
     jobTitle: string
+    jobCreatorId: string
     status: string
     appliedAt: string
     checklistDetails?: Record<string, {
@@ -26,7 +27,7 @@ type Application = {
 
 export default function AdminApplicationsPage() {
     const router = useRouter()
-    const { user } = useAuth()
+    const { user, userData } = useAuth()
     const [applications, setApplications] = useState<Application[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "accepted" | "rejected" | "hold">("all")
@@ -38,15 +39,29 @@ export default function AdminApplicationsPage() {
                 return
             }
 
+            // 기업회원이 아니면 접근 불가
+            if (userData?.role !== "company") {
+                alert("기업 회원만 접근할 수 있습니다.")
+                router.push("/jobs")
+                return
+            }
+
             try {
-                const q = query(collection(db, "applications"), orderBy("appliedAt", "desc"))
+                // 현재 로그인한 기업 회원이 올린 공고의 지원서만 조회
+                const q = query(
+                    collection(db, "applications"),
+                    where("jobCreatorId", "==", user.uid)
+                )
                 const querySnapshot = await getDocs(q)
                 const apps: Application[] = []
-                
+
                 querySnapshot.forEach((doc) => {
                     apps.push({ id: doc.id, ...doc.data() } as Application)
                 })
-                
+
+                // 클라이언트에서 날짜순 정렬 (최신순)
+                apps.sort((a, b) => new Date(b.appliedAt).getTime() - new Date(a.appliedAt).getTime())
+
                 setApplications(apps)
             } catch (error) {
                 console.error("지원서 조회 실패:", error)
@@ -56,8 +71,10 @@ export default function AdminApplicationsPage() {
             }
         }
 
-        fetchApplications()
-    }, [user, router])
+        if (userData !== null) {
+            fetchApplications()
+        }
+    }, [user, userData, router])
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -148,7 +165,7 @@ export default function AdminApplicationsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">지원서 관리</h1>
-                            <p className="text-sm text-gray-500 mt-1">2025년 하반기 각 주문별 진입 및 경력사원 채용</p>
+                            <p className="text-sm text-gray-500 mt-1">내가 올린 공고에 지원한 지원자 목록</p>
                         </div>
                         <button
                             onClick={handleResetSummaries}
@@ -209,7 +226,7 @@ export default function AdminApplicationsPage() {
                                         onClick={() => router.push(`/admin/applications/${app.id}`)}
                                         className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium hover:bg-green-100 cursor-pointer transition-colors"
                                     >
-                                        {app.seekerName} ({app.jobTitle})
+                                        {app.seekerName || app.seekerEmail} ({app.jobTitle})
                                     </span>
                                 ))}
                             </div>
@@ -285,9 +302,9 @@ export default function AdminApplicationsPage() {
                             <input type="checkbox" className="rounded border-gray-300" />
                         </div>
                         <div className="col-span-2">이름</div>
-                        <div className="col-span-1 text-center">서류</div>
-                        <div className="col-span-3">전형 단계</div>
-                        <div className="col-span-3 text-center">면접 일시</div>
+                        <div className="col-span-1 text-center">경력</div>
+                        <div className="col-span-3">진행 공고</div>
+                        <div className="col-span-3 text-center">지원 일시</div>
                         <div className="col-span-2"></div>
                     </div>
 
@@ -315,17 +332,18 @@ export default function AdminApplicationsPage() {
                                         <span className="font-medium text-gray-900">{app.seekerName || app.seekerEmail}</span>
                                     </div>
                                     <div className="col-span-1 flex items-center justify-center">
-                                        <span className="text-gray-500">📄</span>
+                                        <span className="text-gray-500">-</span>
                                     </div>
                                     <div className="col-span-3 flex items-center">
                                         <div className="flex items-center gap-2">
                                             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
                                                 {app.status}
                                             </span>
+                                            <span className="text-sm text-gray-600">{app.jobTitle}</span>
                                         </div>
                                     </div>
                                     <div className="col-span-3 flex items-center justify-center text-sm text-gray-600">
-                                        {app.status === "면접 예정" ? "6월 15일 (목) 오후 1시" : "-"}
+                                        {new Date(app.appliedAt).toLocaleDateString('ko-KR')}
                                     </div>
                                     <div className="col-span-2 flex items-center justify-end">
                                         <button
@@ -335,7 +353,7 @@ export default function AdminApplicationsPage() {
                                             }}
                                             className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                                         >
-                                            자세히 보기 →
+                                            자세히 보기
                                         </button>
                                     </div>
                                 </div>

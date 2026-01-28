@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useAuth } from "../../context/AuthContext"
 import { Button } from "./ui/button"
@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { User, LogOut, ClipboardList } from "lucide-react"
 
 export default function SiteHeader() {
-    const { user, logout } = useAuth();
+    const { user, userData, logout } = useAuth();
     const router = useRouter();
 
     return (
@@ -23,17 +23,20 @@ export default function SiteHeader() {
                     <span className="text-gradient font-bold">WINNOW</span>
                 </button>
 
-                {/* Right Section - 우측 끝 정렬 */}
+                {/* Right Section */}
                 <div className="flex items-center gap-2 ml-auto">
                     {user ? (
                         <>
-                            <Button
-                                onClick={() => router.push("/admin/applications")}
-                                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
-                            >
-                                <ClipboardList className="w-4 h-4" />
-                                관리자
-                            </Button>
+                            {/* 기업회원만 관리자 버튼 표시 */}
+                            {userData?.role === "company" && (
+                                <Button
+                                    onClick={() => router.push("/admin/applications")}
+                                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+                                >
+                                    <ClipboardList className="w-4 h-4" />
+                                    관리자
+                                </Button>
+                            )}
                             <Button
                                 onClick={() => router.push("/mypage")}
                                 className="flex items-center gap-2 btn-gradient text-white"
