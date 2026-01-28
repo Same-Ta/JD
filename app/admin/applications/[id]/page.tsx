@@ -125,10 +125,8 @@ export default function ApplicationDetailPage() {
     }
 
     useEffect(() => {
-        // aiSummary가 없으면 자동 생성
-        if (application && !application.aiSummary && !generatedSummary && application.checklistDetails) {
-            generateSummary()
-        } else if (application?.aiSummary) {
+        // aiSummary가 이미 있으면 표시
+        if (application?.aiSummary) {
             setGeneratedSummary(application.aiSummary)
         }
     }, [application])
@@ -200,41 +198,36 @@ export default function ApplicationDetailPage() {
             {/* Main Content */}
             <main className="max-w-5xl mx-auto px-6 py-8">
                 <div className="space-y-6">
-                    {/* AI Summary Card */}
-                    {(generatedSummary || isGeneratingSummary) && (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm p-6 border-2 border-blue-200">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                                        <span className="text-white text-sm">✨</span>
-                                    </div>
-                                    <h2 className="text-lg font-bold text-gray-900">AI 요약</h2>
-                                </div>
-                                {!isGeneratingSummary && (
-                                    <button
-                                        onClick={() => setShowFullAnswers(!showFullAnswers)}
-                                        className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                                    >
-                                        {showFullAnswers ? "요약만 보기 ▲" : "전체 답변 보기 ▼"}
-                                    </button>
-                                )}
-                            </div>
-                            <div className="bg-white rounded-lg p-5 shadow-sm">
-                                {isGeneratingSummary ? (
-                                    <div className="flex items-center justify-center py-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                            <span className="text-gray-600">AI가 답변을 분석하고 있습니다...</span>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
-{generatedSummary}
-                                    </pre>
-                                )}
-                            </div>
+                    {/* AI Summary Card - 항상 표시 */}
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg shadow-sm p-6 border-2 border-blue-200">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-bold text-gray-900">AI 요약</h2>
                         </div>
-                    )}
+                        <div className="bg-white rounded-lg p-5 shadow-sm">
+                            {isGeneratingSummary ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-gray-600">AI가 답변을 분석하고 있습니다...</span>
+                                    </div>
+                                </div>
+                            ) : generatedSummary ? (
+                                <pre className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-sans">
+{generatedSummary}
+                                </pre>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-8">
+                                    <p className="text-gray-500 mb-4">AI 요약이 아직 생성되지 않았습니다.</p>
+                                    <button
+                                        onClick={generateSummary}
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                                    >
+                                        AI 요약 생성하기
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {/* Application Info Card */}
                     <div className="bg-white rounded-lg shadow-sm p-6">
@@ -263,10 +256,9 @@ export default function ApplicationDetailPage() {
                         </div>
                     </div>
 
-                    {/* Checklist Responses */}
-                    {showFullAnswers && (
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h2 className="text-lg font-bold text-gray-900 mb-4">경험 및 역량 상세</h2>
+                    {/* Checklist Responses - 항상 표시 */}
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h2 className="text-lg font-bold text-gray-900 mb-4">전체 답변</h2>
                             
                             {checklistEntries.length === 0 ? (
                                 <p className="text-gray-500 text-sm">작성된 경험이 없습니다.</p>
@@ -315,7 +307,6 @@ export default function ApplicationDetailPage() {
                             </div>
                         )}
                     </div>
-                    )}
 
                     {/* Actions */}
                     <div className="flex justify-end gap-3">

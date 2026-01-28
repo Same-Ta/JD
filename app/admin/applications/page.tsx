@@ -75,22 +75,6 @@ export default function AdminApplicationsPage() {
         }
     }
 
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case "검토 중":
-            case "면접 요청":
-                return "⏳"
-            case "면접 예정":
-                return "📅"
-            case "합격":
-                return "✓"
-            case "불합격":
-                return "✗"
-            default:
-                return "📄"
-        }
-    }
-
     const filteredApplications = applications.filter((app) => {
         if (selectedTab === "all") return true
         if (selectedTab === "pending") return app.status === "검토 중" || app.status === "면접 요청"
@@ -109,6 +93,40 @@ export default function AdminApplicationsPage() {
         return 0
     }
 
+    // 통계 계산
+    const stats = {
+        total: applications.length,
+        pending: applications.filter(a => a.status === "검토 중" || a.status === "면접 요청").length,
+        interview: applications.filter(a => a.status === "면접 예정").length,
+        accepted: applications.filter(a => a.status === "합격").length,
+        rejected: applications.filter(a => a.status === "불합격").length,
+    }
+
+    const acceptedApplicants = applications.filter(a => a.status === "합격")
+
+    const handleResetSummaries = async () => {
+        if (!confirm("모든 AI 요약을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) {
+            return;
+        }
+
+        try {
+            const response = await fetch("/api/reset-summaries", {
+                method: "POST",
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message);
+                window.location.reload();
+            } else {
+                alert("AI 요약 초기화에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("AI 요약 초기화 실패:", error);
+            alert("AI 요약 초기화 중 오류가 발생했습니다.");
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -125,10 +143,78 @@ export default function AdminApplicationsPage() {
             {/* Header */}
             <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-6 py-4">
-                    <h1 className="text-2xl font-bold text-gray-900">지원서 관리</h1>
-                    <p className="text-sm text-gray-500 mt-1">2025년 하반기 각 주문별 진입 및 경력사원 채용</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">지원서 관리</h1>
+                            <p className="text-sm text-gray-500 mt-1">2025년 하반기 각 주문별 진입 및 경력사원 채용</p>
+                        </div>
+                        <button
+                            onClick={handleResetSummaries}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors"
+                        >
+                            AI 요약 전체 초기화
+                        </button>
+                    </div>
                 </div>
             </header>
+
+            {/* Statistics Dashboard */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-gray-200">
+                <div className="max-w-7xl mx-auto px-6 py-6">
+                    <div className="grid grid-cols-5 gap-4">
+                        {/* 총 지원자 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+                            <p className="text-xs text-gray-500 font-medium">총 지원자</p>
+                            <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
+                        </div>
+
+                        {/* 검토 중 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
+                            <p className="text-xs text-gray-500 font-medium">검토 중</p>
+                            <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
+                        </div>
+
+                        {/* 면접 예정 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-indigo-500">
+                            <p className="text-xs text-gray-500 font-medium">면접 예정</p>
+                            <p className="text-2xl font-bold text-indigo-600 mt-1">{stats.interview}</p>
+                        </div>
+
+                        {/* 합격자 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                            <p className="text-xs text-gray-500 font-medium">합격자</p>
+                            <p className="text-2xl font-bold text-green-600 mt-1">{stats.accepted}</p>
+                        </div>
+
+                        {/* 불합격 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-gray-500">
+                            <p className="text-xs text-gray-500 font-medium">불합격</p>
+                            <p className="text-2xl font-bold text-gray-600 mt-1">{stats.rejected}</p>
+                        </div>
+                    </div>
+
+                    {/* 합격자 명단 */}
+                    {acceptedApplicants.length > 0 && (
+                        <div className="mt-4 bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                            <div className="flex items-center gap-2 mb-3">
+                                <h3 className="text-sm font-bold text-gray-900">합격자 명단</h3>
+                                <span className="text-xs text-gray-500">({acceptedApplicants.length}명)</span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {acceptedApplicants.map((app) => (
+                                    <span
+                                        key={app.id}
+                                        onClick={() => router.push(`/admin/applications/${app.id}`)}
+                                        className="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium hover:bg-green-100 cursor-pointer transition-colors"
+                                    >
+                                        {app.seekerName} ({app.jobTitle})
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Tabs */}
             <div className="bg-white border-b border-gray-200">
@@ -232,7 +318,7 @@ export default function AdminApplicationsPage() {
                                     <div className="col-span-3 flex items-center">
                                         <div className="flex items-center gap-2">
                                             <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                                                {getStatusIcon(app.status)} {app.status}
+                                                {app.status}
                                             </span>
                                         </div>
                                     </div>
