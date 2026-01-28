@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
     try {
         const applicationData = await request.json();
-        console.log('API received applicationData:', JSON.stringify(applicationData, null, 2)); // 디버깅
+        console.log('API received applicationData:', JSON.stringify(applicationData, null, 2)); // ?�버�?
 
         const { 
             seekerId, 
@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
             aiSummary 
         } = applicationData;
 
-        console.log('API received checklistDetails:', JSON.stringify(checklistDetails, null, 2)); // 디버깅
+        console.log('API received checklistDetails:', JSON.stringify(checklistDetails, null, 2)); // ?�버�?
 
-        // checklistDetails가 있으면 그대로 사용, 없으면 기존 방식으로 변환
+        // checklistDetails가 ?�으�?그�?�??�용, ?�으�?기존 방식?�로 변??
         let finalChecklistDetails = checklistDetails;
         
         if (!checklistDetails) {
-            // 기존 호환성: checkedItems 배열을 객체로 변환
+            // 기존 ?�환?? checkedItems 배열??객체�?변??
             const checkedItemsObject: Record<string, boolean> = {};
             if (Array.isArray(checkedItems)) {
                 checkedItems.forEach((item: string) => {
@@ -45,16 +45,16 @@ export async function POST(request: NextRequest) {
             jobTitle,
             jobCreatorId,
             teamName: team || "",
-            checklistDetails: finalChecklistDetails, // 체크리스트 상세 정보 저장
-            checkedItems: Array.isArray(checkedItems) ? checkedItems : [], // 기존 호환성 유지
+            checklistDetails: finalChecklistDetails, // 체크리스???�세 ?�보 ?�??
+            checkedItems: Array.isArray(checkedItems) ? checkedItems : [], // 기존 ?�환???��?
             comments: typeof comments === 'object' ? JSON.stringify(comments) : comments,
-            aiSummary: aiSummary || "", // AI 요약 저장
+            aiSummary: aiSummary || "", // AI ?�약 ?�??
             appliedAt: new Date().toISOString(),
             appliedDate: new Date().toISOString(),
-            status: "검토 중",
+            status: "검??�?,
         });
 
-        console.log('Saved to DB with checklistDetails:', JSON.stringify(finalChecklistDetails, null, 2)); // 디버깅
+        console.log('Saved to DB with checklistDetails:', JSON.stringify(finalChecklistDetails, null, 2)); // ?�버�?
 
         return NextResponse.json({ success: true, id: docRef.id });
     } catch (error) {

@@ -54,7 +54,7 @@ export default function ApplicationDetailPage() {
                 if (docSnap.exists()) {
                     const data = { id: docSnap.id, ...docSnap.data() } as Application
                     setApplication(data)
-                    setSelectedStatus(data.status || "검토 중")
+                    setSelectedStatus(data.status || "접수")
                 } else {
                     alert("지원서를 찾을 수 없습니다.")
                     router.push("/admin/applications")
@@ -168,7 +168,7 @@ export default function ApplicationDetailPage() {
                     </button>
                     <div className="flex items-start justify-between">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">{application.seekerName || "이름 없음"}</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">{application.seekerName || application.seekerEmail}</h1>
                             <p className="text-sm text-gray-500 mt-1">{application.seekerEmail}</p>
                             <p className="text-sm text-gray-500 mt-1">지원 공고: {application.jobTitle}</p>
                         </div>
@@ -178,11 +178,11 @@ export default function ApplicationDetailPage() {
                                 onChange={(e) => setSelectedStatus(e.target.value)}
                                 className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                             >
-                                <option value="검토 중">검토 중</option>
-                                <option value="면접 요청">면접 요청</option>
-                                <option value="면접 예정">면접 예정</option>
+                                <option value="접수">접수</option>
+                                <option value="면접 검토">면접 검토</option>
                                 <option value="합격">합격</option>
                                 <option value="불합격">불합격</option>
+                                <option value="보류">보류</option>
                             </select>
                             <button
                                 onClick={handleStatusUpdate}
@@ -242,12 +242,14 @@ export default function ApplicationDetailPage() {
                             <div>
                                 <span className="text-gray-500">현재 상태:</span>
                                 <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium inline-block ${
-                                    application.status === "검토 중" || application.status === "면접 요청"
+                                    application.status === "접수" || application.status === "면접 검토"
                                         ? "bg-orange-100 text-orange-700"
-                                        : application.status === "면접 예정"
-                                        ? "bg-blue-100 text-blue-700"
                                         : application.status === "합격"
                                         ? "bg-green-100 text-green-700"
+                                        : application.status === "불합격"
+                                        ? "bg-red-100 text-red-700"
+                                        : application.status === "보류"
+                                        ? "bg-yellow-100 text-yellow-700"
                                         : "bg-gray-100 text-gray-700"
                                 }`}>
                                     {application.status}

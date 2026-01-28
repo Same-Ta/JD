@@ -29,7 +29,7 @@ export default function AdminApplicationsPage() {
     const { user } = useAuth()
     const [applications, setApplications] = useState<Application[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "interview" | "accepted" | "rejected">("all")
+    const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "accepted" | "rejected" | "hold">("all")
 
     useEffect(() => {
         const fetchApplications = async () => {
@@ -61,15 +61,17 @@ export default function AdminApplicationsPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
+            case "접수":
             case "검토 중":
-            case "면접 요청":
-                return "text-orange-600 bg-orange-50"
-            case "면접 예정":
                 return "text-blue-600 bg-blue-50"
+            case "면접 검토":
+                return "text-orange-600 bg-orange-50"
             case "합격":
                 return "text-green-600 bg-green-50"
             case "불합격":
-                return "text-gray-600 bg-gray-50"
+                return "text-red-600 bg-red-50"
+            case "보류":
+                return "text-yellow-600 bg-yellow-50"
             default:
                 return "text-gray-600 bg-gray-50"
         }
@@ -77,29 +79,29 @@ export default function AdminApplicationsPage() {
 
     const filteredApplications = applications.filter((app) => {
         if (selectedTab === "all") return true
-        if (selectedTab === "pending") return app.status === "검토 중" || app.status === "면접 요청"
-        if (selectedTab === "interview") return app.status === "면접 예정"
+        if (selectedTab === "pending") return app.status === "접수" || app.status === "검토 중" || app.status === "면접 검토"
         if (selectedTab === "accepted") return app.status === "합격"
         if (selectedTab === "rejected") return app.status === "불합격"
+        if (selectedTab === "hold") return app.status === "보류"
         return true
     })
 
     const getTabCount = (tab: string) => {
         if (tab === "all") return applications.length
-        if (tab === "pending") return applications.filter(a => a.status === "검토 중" || a.status === "면접 요청").length
-        if (tab === "interview") return applications.filter(a => a.status === "면접 예정").length
+        if (tab === "pending") return applications.filter(a => a.status === "접수" || a.status === "검토 중" || a.status === "면접 검토").length
         if (tab === "accepted") return applications.filter(a => a.status === "합격").length
         if (tab === "rejected") return applications.filter(a => a.status === "불합격").length
+        if (tab === "hold") return applications.filter(a => a.status === "보류").length
         return 0
     }
 
     // 통계 계산
     const stats = {
         total: applications.length,
-        pending: applications.filter(a => a.status === "검토 중" || a.status === "면접 요청").length,
-        interview: applications.filter(a => a.status === "면접 예정").length,
+        pending: applications.filter(a => a.status === "접수" || a.status === "검토 중" || a.status === "면접 검토").length,
         accepted: applications.filter(a => a.status === "합격").length,
         rejected: applications.filter(a => a.status === "불합격").length,
+        hold: applications.filter(a => a.status === "보류").length,
     }
 
     const acceptedApplicants = applications.filter(a => a.status === "합격")
@@ -168,16 +170,10 @@ export default function AdminApplicationsPage() {
                             <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
                         </div>
 
-                        {/* 검토 중 */}
+                        {/* 접수/면접 검토 */}
                         <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-orange-500">
-                            <p className="text-xs text-gray-500 font-medium">검토 중</p>
+                            <p className="text-xs text-gray-500 font-medium">접수/면접 검토</p>
                             <p className="text-2xl font-bold text-orange-600 mt-1">{stats.pending}</p>
-                        </div>
-
-                        {/* 면접 예정 */}
-                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-indigo-500">
-                            <p className="text-xs text-gray-500 font-medium">면접 예정</p>
-                            <p className="text-2xl font-bold text-indigo-600 mt-1">{stats.interview}</p>
                         </div>
 
                         {/* 합격자 */}
@@ -186,10 +182,16 @@ export default function AdminApplicationsPage() {
                             <p className="text-2xl font-bold text-green-600 mt-1">{stats.accepted}</p>
                         </div>
 
-                        {/* 불합격 */}
-                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-gray-500">
-                            <p className="text-xs text-gray-500 font-medium">불합격</p>
-                            <p className="text-2xl font-bold text-gray-600 mt-1">{stats.rejected}</p>
+                        {/* 불합격자 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                            <p className="text-xs text-gray-500 font-medium">불합격자</p>
+                            <p className="text-2xl font-bold text-red-600 mt-1">{stats.rejected}</p>
+                        </div>
+
+                        {/* 보류 */}
+                        <div className="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+                            <p className="text-xs text-gray-500 font-medium">보류</p>
+                            <p className="text-2xl font-bold text-yellow-600 mt-1">{stats.hold}</p>
                         </div>
                     </div>
 
@@ -228,7 +230,7 @@ export default function AdminApplicationsPage() {
                                     : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}
                         >
-                            접수 <span className="ml-1">{getTabCount("all")}</span>
+                            전체 <span className="ml-1">{getTabCount("all")}</span>
                         </button>
                         <button
                             onClick={() => setSelectedTab("pending")}
@@ -238,17 +240,7 @@ export default function AdminApplicationsPage() {
                                     : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}
                         >
-                            면접 검토 <span className="ml-1">{getTabCount("pending")}</span>
-                        </button>
-                        <button
-                            onClick={() => setSelectedTab("interview")}
-                            className={`py-4 px-2 text-sm font-medium border-b-2 transition-colors ${
-                                selectedTab === "interview"
-                                    ? "border-blue-500 text-blue-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700"
-                            }`}
-                        >
-                            서류 합격자 <span className="ml-1">{getTabCount("interview")}</span>
+                            접수/면접 검토 <span className="ml-1">{getTabCount("pending")}</span>
                         </button>
                         <button
                             onClick={() => setSelectedTab("accepted")}
@@ -258,7 +250,7 @@ export default function AdminApplicationsPage() {
                                     : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}
                         >
-                            입사뷰 <span className="ml-1">{getTabCount("accepted")}</span>
+                            합격자 <span className="ml-1">{getTabCount("accepted")}</span>
                         </button>
                         <button
                             onClick={() => setSelectedTab("rejected")}
@@ -268,7 +260,17 @@ export default function AdminApplicationsPage() {
                                     : "border-transparent text-gray-500 hover:text-gray-700"
                             }`}
                         >
-                            입사 제안 <span className="ml-1">{getTabCount("rejected")}</span>
+                            불합격자 <span className="ml-1">{getTabCount("rejected")}</span>
+                        </button>
+                        <button
+                            onClick={() => setSelectedTab("hold")}
+                            className={`py-4 px-2 text-sm font-medium border-b-2 transition-colors ${
+                                selectedTab === "hold"
+                                    ? "border-blue-500 text-blue-600"
+                                    : "border-transparent text-gray-500 hover:text-gray-700"
+                            }`}
+                        >
+                            보류 <span className="ml-1">{getTabCount("hold")}</span>
                         </button>
                     </div>
                 </div>
@@ -310,7 +312,7 @@ export default function AdminApplicationsPage() {
                                         />
                                     </div>
                                     <div className="col-span-2 flex items-center">
-                                        <span className="font-medium text-gray-900">{app.seekerName || "이름 없음"}</span>
+                                        <span className="font-medium text-gray-900">{app.seekerName || app.seekerEmail}</span>
                                     </div>
                                     <div className="col-span-1 flex items-center justify-center">
                                         <span className="text-gray-500">📄</span>
