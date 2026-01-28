@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
             team,
             checkedItems,
             comments,
-            checklistDetails 
+            checklistDetails,
+            aiSummary 
         } = applicationData;
 
         console.log('API received checklistDetails:', JSON.stringify(checklistDetails, null, 2)); // 디버깅
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
             checklistDetails: finalChecklistDetails, // 체크리스트 상세 정보 저장
             checkedItems: Array.isArray(checkedItems) ? checkedItems : [], // 기존 호환성 유지
             comments: typeof comments === 'object' ? JSON.stringify(comments) : comments,
+            aiSummary: aiSummary || "", // AI 요약 저장
             appliedAt: new Date().toISOString(),
             appliedDate: new Date().toISOString(),
             status: "검토 중",

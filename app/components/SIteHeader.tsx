@@ -3,7 +3,7 @@
 import { useAuth } from "../../context/AuthContext"
 import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
-import { User, LogOut } from "lucide-react"
+import { User, LogOut, ClipboardList } from "lucide-react"
 
 export default function SiteHeader() {
     const { user, logout } = useAuth();
@@ -27,6 +27,13 @@ export default function SiteHeader() {
                 <div className="flex items-center gap-2 ml-auto">
                     {user ? (
                         <>
+                            <Button
+                                onClick={() => router.push("/admin/applications")}
+                                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                                <ClipboardList className="w-4 h-4" />
+                                관리자
+                            </Button>
                             <Button
                                 onClick={() => router.push("/mypage")}
                                 className="flex items-center gap-2 btn-gradient text-white"
